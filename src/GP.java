@@ -1,15 +1,15 @@
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public interface GP {
     public Node bestTree(); // i know Unathi said it needs a name change, but it's fine as is imo
     public Node build(); //changes this to public coz interfaces dont allow
                          //  you to implement protected things, and if it was private I don't think it'd let you inherit it -- not sure abt that tho
-    public HashMap<Node, Float> intialisePopulation();
+    public ArrayList<Node> intialisePopulation();
 
     // I removed the parameters coz they are already attributes of the class
-    public HashMap<Node, Float> selection();
+    public ArrayList<Node> selection();
     
-    public HashMap<Node, Float> geneticOperators(); 
+    public ArrayList<Node> geneticOperators(); 
     
-    public HashMap<Node, Float> populationReplacement();
+    public ArrayList<Node> populationReplacement();
 }

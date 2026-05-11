@@ -11,11 +11,24 @@ public class DataCollection {
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(","); // Use comma as delimiter
-                Integer[] intValues = new Integer[values.length];
 
+                if (values.length == 0) continue;
+                // Skip header lines that start with a non-numeric label like "class"
+                if (values[0].trim().equalsIgnoreCase("class")) continue;
+
+                if (values.length < 9) continue; // not enough columns
+
+                Integer[] intValues = new Integer[values.length];
+                boolean parseError = false;
                 for (int i = 0; i < values.length; i++){
-                    intValues[i] = Integer.parseInt(values[i]);
+                    try {
+                        intValues[i] = Integer.parseInt(values[i].trim());
+                    } catch (NumberFormatException e) {
+                        parseError = true;
+                        break;
+                    }
                 }
+                if (parseError) continue; // skip malformed lines
 
                 Data data = new Data(
                     intValues[0], 
