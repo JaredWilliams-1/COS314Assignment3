@@ -4,31 +4,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DataCollection {
-    public static ArrayList<Data> getCSVValues(String filename){
+    public static ArrayList<Data> getCSVValues(String filename) {
         ArrayList<Data> output = new ArrayList<>();
-        String line = "";
-        
+        String line;
+        boolean firstLine = true;
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             while ((line = br.readLine()) != null) {
-                String[] values = line.split(","); // Use comma as delimiter
-                Integer[] intValues = new Integer[values.length];
-
-                for (int i = 0; i < values.length; i++){
-                    intValues[i] = Integer.parseInt(values[i]);
-                }
-
-                Data data = new Data(
-                    intValues[0], 
-                    intValues[1], 
-                    intValues[2], 
-                    intValues[3],
-                    intValues[4], 
-                    intValues[5], 
-                    intValues[6], 
-                    intValues[7], 
-                    intValues[8]
-                );
-                output.add(data);
+                if (firstLine) { firstLine = false; continue; }
+                String[] values = line.split(",");
+                if (values.length < 10) continue;
+                output.add(new Data(
+                    Integer.parseInt(values[0].trim()),
+                    Integer.parseInt(values[1].trim()),
+                    Integer.parseInt(values[2].trim()),
+                    Integer.parseInt(values[3].trim()),
+                    Integer.parseInt(values[4].trim()),
+                    Integer.parseInt(values[5].trim()),
+                    Integer.parseInt(values[6].trim()),
+                    Integer.parseInt(values[7].trim()),
+                    Integer.parseInt(values[8].trim()),
+                    Integer.parseInt(values[9].trim())
+                ));
             }
         } catch (IOException e) {
             e.printStackTrace();
