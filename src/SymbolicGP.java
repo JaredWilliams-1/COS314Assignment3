@@ -56,22 +56,22 @@ public class SymbolicGP implements GP {
 	}
 
 	@Override
-	public HashMap<Node, Float> intialisePopulation() {
+	public ArrayList<Node> intialisePopulation() {
 		return null;
 	}
 
 	@Override
-	public HashMap<Node, Float> selection() {
+	public ArrayList<Node> selection() {
 		return null;
 	}
 
 	@Override
-	public HashMap<Node, Float> geneticOperators() {
+	public ArrayList<Node> geneticOperators() {
 		return null;
 	}
 
 	@Override
-	public HashMap<Node, Float> populationReplacement() {
+	public ArrayList<Node> populationReplacement() {
 		return null;
 	}
     
