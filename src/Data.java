@@ -1,26 +1,32 @@
 public class Data {
-    public int result;
+    public int result; // class label (can't use the keyword "class" as a field name)
     public int age;
     public int menopause;
+    public int nodes;
     public int tumorSize;
-    public int invNodes;
     public int nodeCaps;
-    public int degMalig;
-    public int breast;
-    public int breastQuad;
     public int irradiat;
+    public int breast;
+    public int quad;
 
-    public Data(int result, int age, int menopause, int tumorSize, int invNodes,
-                int nodeCaps, int degMalig, int breast, int breastQuad, int irradiat) {
-        this.result     = result;
-        this.age        = age;
-        this.menopause  = menopause;
-        this.tumorSize  = tumorSize;
-        this.invNodes   = invNodes;
-        this.nodeCaps   = nodeCaps;
-        this.degMalig   = degMalig;
-        this.breast     = breast;
-        this.breastQuad = breastQuad;
-        this.irradiat   = irradiat;
+    public Data(
+            int result,
+            int age,
+            int menopause,
+            int nodes,
+            int tumorSize,
+            int nodeCaps,
+            int irradiat,
+            int breast,
+            int quad) {
+        this.result = result;
+        this.age = age;
+        this.menopause = menopause;
+        this.nodes = nodes;
+        this.tumorSize = tumorSize;
+        this.nodeCaps = nodeCaps;
+        this.irradiat = irradiat;
+        this.breast = breast;
+        this.quad = quad;
     }
 }
