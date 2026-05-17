@@ -1,12 +1,13 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Random;
 
 public class LogicalGP implements GP {
 	public Node root;
 	public ArrayList<Data> data;
-	public HashMap<Node, Float> trees;
+	public LinkedHashMap<Node, Float> trees;
 	public ArrayList<String> terminalSet;
 	public ArrayList<String> functionSet;
 	public int treeDepth;
@@ -16,7 +17,7 @@ public class LogicalGP implements GP {
 	public float mutationRate;
 	public int mutationOffspringDepth;
 	public long seed;
-	public int numElites = 20;
+	public int numElites = 4;
 
 	public static final int POPULATION_SIZE = 200;
 	public static final int MAX_GENERATIONS = 100;
@@ -49,7 +50,7 @@ public class LogicalGP implements GP {
 		this.seed = seed;
 
 		this.root = null;
-		this.trees = new HashMap<>();
+		this.trees = new LinkedHashMap<>();
 		this.fitnessCache = new HashMap<>();
 		this.selectedParents = new ArrayList<>();
 		this.offspring = new ArrayList<>();
@@ -77,10 +78,13 @@ public class LogicalGP implements GP {
 		System.out.println("=== Logical GP Evolutionary Run ===");
 		System.out.println("Parameters: popSize=" + POPULATION_SIZE
 				+ ", generations=" + MAX_GENERATIONS
+				+ ", treeDepth=" + treeDepth
 				+ ", maxOffspringDepth=" + maxOffspringDepth
 				+ ", tournamentSize=" + tournamentSize
 				+ ", crossover=" + crossoverRate
-				+ ", mutation=" + mutationRate + "\n");
+				+ ", mutation=" + mutationRate 
+				+ ", mutDepth=" + mutationOffspringDepth
+				+ ", numElites=" + numElites + "\n");
 
 		intialisePopulation();
 		Node bestOverall = null;
@@ -157,6 +161,9 @@ public class LogicalGP implements GP {
 	public ArrayList<Node> selection() {
 		ArrayList<Node> selected = new ArrayList<>();
 		ArrayList<Node> pool = new ArrayList<>(trees.keySet());
+		// Sort by tree structure string so iteration order is deterministic
+		// regardless of how HashMap assigned memory addresses to Node objects
+		pool.sort((a, b) -> a.TreeToString().compareTo(b.TreeToString()));
 
 		for (int i = 0; i < POPULATION_SIZE; i++) {
 			selected.add(runTournament(pool));
@@ -448,14 +455,35 @@ public class LogicalGP implements GP {
 			return 0f;
 		}
 
-		int correct = 0;
+		int tp = 0, fp = 0, fn = 0, tn = 0;
 		for (Data d : data) {
-			if (evaluateTree(tree, d) == d.result) {
-				correct++;
+			int pred = evaluateTree(tree, d);
+			if (pred == 1 && d.result == 1) {
+				tp++;
+			} else if (pred == 1 && d.result == 0) {
+				fp++;
+			} else if (pred == 0 && d.result == 1) {
+				fn++;
+			} else {
+				tn++;
 			}
 		}
 
-		float result = (float) correct / data.size();
+		float sensitivity;
+		if (tp + fn == 0) {
+			sensitivity = 0f;
+		} else {
+			sensitivity = (float) tp / (tp + fn);
+		}
+
+		float specificity;
+		if (tn + fp == 0) {
+			specificity = 0f;
+		} else {
+			specificity = (float) tn / (tn + fp);
+		}
+
+		float result = (sensitivity + specificity) / 2f;
 		fitnessCache.put(cacheKey, result);
 		return result;
 	}
