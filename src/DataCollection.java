@@ -34,13 +34,13 @@ public class DataCollection {
                     intValues[0], 
                     intValues[1], 
                     intValues[2], 
-                    intValues[3],
-                    intValues[4], 
+                    intValues[4],
+                    intValues[3], 
                     intValues[5], 
                     intValues[6], 
-                    intValues[7], 
-                    intValues[8],
-                    intValues[9]
+                    intValues[9], 
+                    intValues[7],
+                    intValues[8]
                 );
                 output.add(data);
             }

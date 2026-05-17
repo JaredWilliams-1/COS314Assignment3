@@ -16,7 +16,7 @@ public class Main {
         int   treeDepth              = 5;
         int   maxOffspringDepth      = 8;
         int   tournamentSize         = 7;
-        float crossoverRate          = 0.80f;
+        float crossoverRate          = 0.75f;
         float mutationRate           = 0.15f;
         int   mutationOffspringDepth = 2;
         long  seed                   = 42L;

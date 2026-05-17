@@ -16,7 +16,7 @@ public class LogicalGP implements GP {
 	public float mutationRate;
 	public int mutationOffspringDepth;
 	public long seed;
-	public int numElites = 2;
+	public int numElites = 20;
 
 	public static final int POPULATION_SIZE = 200;
 	public static final int MAX_GENERATIONS = 100;
