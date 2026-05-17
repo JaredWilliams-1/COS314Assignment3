@@ -16,7 +16,7 @@ public class LogicalGP implements GP {
 	public float mutationRate;
 	public int mutationOffspringDepth;
 	public long seed;
-	public int numElites = 20;
+	public int numElites = 4;
 
 	public static final int POPULATION_SIZE = 200;
 	public static final int MAX_GENERATIONS = 100;
@@ -448,14 +448,35 @@ public class LogicalGP implements GP {
 			return 0f;
 		}
 
-		int correct = 0;
+		int tp = 0, fp = 0, fn = 0, tn = 0;
 		for (Data d : data) {
-			if (evaluateTree(tree, d) == d.result) {
-				correct++;
+			int pred = evaluateTree(tree, d);
+			if (pred == 1 && d.result == 1) {
+				tp++;
+			} else if (pred == 1 && d.result == 0) {
+				fp++;
+			} else if (pred == 0 && d.result == 1) {
+				fn++;
+			} else {
+				tn++;
 			}
 		}
 
-		float result = (float) correct / data.size();
+		float sensitivity;
+		if (tp + fn == 0) {
+			sensitivity = 0f;
+		} else {
+			sensitivity = (float) tp / (tp + fn);
+		}
+
+		float specificity;
+		if (tn + fp == 0) {
+			specificity = 0f;
+		} else {
+			specificity = (float) tn / (tn + fp);
+		}
+
+		float result = (sensitivity + specificity) / 2f;
 		fitnessCache.put(cacheKey, result);
 		return result;
 	}

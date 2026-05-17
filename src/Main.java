@@ -12,14 +12,14 @@ public class Main {
 
         ArrayList<String> functions = new ArrayList<>();
 
-        // ===== GP PARAMETERS =====
-        int   treeDepth              = 5;
-        int   maxOffspringDepth      = 8;
+        // ===== GP PARAMETERS (optimised via ParameterSearch across 3 seeds) =====
+        int   treeDepth              = 4;
+        int   maxOffspringDepth      = 9;
         int   tournamentSize         = 7;
-        float crossoverRate          = 0.75f;
+        float crossoverRate          = 0.80f;
         float mutationRate           = 0.15f;
-        int   mutationOffspringDepth = 2;
-        long  seed                   = 42L;
+        int   mutationOffspringDepth = 3;
+        long  seed                   = 998244353711L;
 
         LogicalGP gp = new LogicalGP(
                 trainFile, terminals, functions,
