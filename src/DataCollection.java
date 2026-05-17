@@ -16,7 +16,7 @@ public class DataCollection {
                 // Skip header lines that start with a non-numeric label like "class"
                 if (values[0].trim().equalsIgnoreCase("class")) continue;
 
-                if (values.length < 9) continue; // not enough columns
+                if (values.length < 10) continue; // not enough columns
 
                 Integer[] intValues = new Integer[values.length];
                 boolean parseError = false;
@@ -39,7 +39,8 @@ public class DataCollection {
                     intValues[5], 
                     intValues[6], 
                     intValues[7], 
-                    intValues[8]
+                    intValues[8],
+                    intValues[9]
                 );
                 output.add(data);
             }

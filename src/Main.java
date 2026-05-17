@@ -1,29 +1,60 @@
 import java.util.ArrayList;
 
 public class Main {
-    public static void main(String [] args){
-        Node test1 = new Node(Node.Type.FUNCTION, "+");
-        test1.addLeft(new Node(Node.Type.TERMINAL, "2"));
-        test1.addRight(new Node(Node.Type.TERMINAL, "4"));
+    public static void main(String[] args) {
 
-        System.out.println(test1.TreeToString());
+        String trainFile = "Breast_train.csv";
+        String testFile  = "Breast_test.csv";
 
-        // Simple CSV retrieval test
-        System.out.println("Testing CSV loading...");
-        ArrayList<Data> dataList = DataCollection.getCSVValues("Breast_train.csv");
-        System.out.println("Loaded " + dataList.size() + " rows from Breast_train.csv");
-        if (!dataList.isEmpty()) {
-            Data first = dataList.get(0);
-            System.out.println("First row: result=" + first.result
-                + ", age=" + first.age
-                + ", menopause=" + first.menopause
-                + ", nodes=" + first.nodes
-                + ", tumorSize=" + first.tumorSize
-                + ", nodeCaps=" + first.nodeCaps
-                + ", irradiat=" + first.irradiat
-                + ", breast=" + first.breast
-                + ", quad=" + first.quad);
-        }
+        ArrayList<String> terminals = new ArrayList<>();
+        terminals.add("0");
+        terminals.add("1");
 
+        ArrayList<String> functions = new ArrayList<>();
+
+        // ===== GP PARAMETERS =====
+        int   treeDepth              = 5;
+        int   maxOffspringDepth      = 8;
+        int   tournamentSize         = 7;
+        float crossoverRate          = 0.80f;
+        float mutationRate           = 0.15f;
+        int   mutationOffspringDepth = 2;
+        long  seed                   = 42L;
+
+        LogicalGP gp = new LogicalGP(
+                trainFile, terminals, functions,
+                treeDepth, maxOffspringDepth, tournamentSize,
+                crossoverRate, mutationRate, mutationOffspringDepth,
+                seed);
+
+        System.out.println("Training data loaded: " + gp.data.size() + " samples");
+        System.out.println("Population size      : " + LogicalGP.POPULATION_SIZE);
+        System.out.println("Max generations      : " + LogicalGP.MAX_GENERATIONS);
+
+        gp.autoGenerateFunctionSet(4);
+        System.out.println("Function set size    : " + gp.functionSet.size() + " predicates\n");
+
+        long startTime = System.currentTimeMillis();
+        Node bestTree = gp.build();
+        long runtimeMs = System.currentTimeMillis() - startTime;
+
+        float[] trainMetrics = gp.computeMetrics(bestTree, gp.data);
+        System.out.println("\n=== Training Results ===");
+        System.out.printf("Accuracy : %.4f%n", trainMetrics[0]);
+        System.out.printf("F1 Score : %.4f%n", trainMetrics[1]);
+
+        ArrayList<Data> testData = DataCollection.getCSVValues(testFile);
+        System.out.println("\nTest data loaded: " + testData.size() + " samples");
+
+        float[] testMetrics = gp.computeMetrics(bestTree, testData);
+        System.out.println("\n=== Test Results ===");
+        System.out.printf("Accuracy : %.4f%n", testMetrics[0]);
+        System.out.printf("F1 Score : %.4f%n", testMetrics[1]);
+
+        System.out.println("\n=== Runtime ===");
+        System.out.printf("Total time : %d ms (%.2f s)%n", runtimeMs, runtimeMs / 1000.0);
+
+        System.out.println("\n=== Best Tree ===");
+        System.out.println(bestTree.TreeToString());
     }
 }
