@@ -1,12 +1,13 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Random;
 
 public class LogicalGP implements GP {
 	public Node root;
 	public ArrayList<Data> data;
-	public HashMap<Node, Float> trees;
+	public LinkedHashMap<Node, Float> trees;
 	public ArrayList<String> terminalSet;
 	public ArrayList<String> functionSet;
 	public int treeDepth;
@@ -49,7 +50,7 @@ public class LogicalGP implements GP {
 		this.seed = seed;
 
 		this.root = null;
-		this.trees = new HashMap<>();
+		this.trees = new LinkedHashMap<>();
 		this.fitnessCache = new HashMap<>();
 		this.selectedParents = new ArrayList<>();
 		this.offspring = new ArrayList<>();
@@ -160,6 +161,9 @@ public class LogicalGP implements GP {
 	public ArrayList<Node> selection() {
 		ArrayList<Node> selected = new ArrayList<>();
 		ArrayList<Node> pool = new ArrayList<>(trees.keySet());
+		// Sort by tree structure string so iteration order is deterministic
+		// regardless of how HashMap assigned memory addresses to Node objects
+		pool.sort((a, b) -> a.TreeToString().compareTo(b.TreeToString()));
 
 		for (int i = 0; i < POPULATION_SIZE; i++) {
 			selected.add(runTournament(pool));
