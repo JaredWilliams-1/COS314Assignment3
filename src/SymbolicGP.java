@@ -16,7 +16,7 @@ public class SymbolicGP implements GP {
 	public float crossoverRate;
 	public float mutationRate;
 	public int mutationOffspringDepth;
-	public int seed;
+	public long seed;
 
 	public static final int POPULATION_SIZE = 200;
 	public static final int MAX_GENERATIONS = 100;
@@ -38,7 +38,7 @@ public class SymbolicGP implements GP {
 			float crossoverRate,
 			float mutationRate,
 			int mutationOffspringDepth,
-			int seed) {
+			long seed) {
 
 		this.data = DataCollection.getCSVValues(filename);
 		this.terminalSet = terminalSet;
@@ -533,6 +533,43 @@ public class SymbolicGP implements GP {
 		}
 
 		return rootNode;
+	}
+
+
+	public float[] computeMetrics(Node tree, ArrayList<Data> dataset) {
+		int tp = 0, fp = 0, fn = 0, tn = 0;
+		for (Data d : dataset) {
+			int predicted = classify(tree, d);
+			if (predicted == 1 && d.result == 1) {
+				tp++;
+			} else if (predicted == 1 && d.result == 0) {
+				fp++;
+			} else if (predicted == 0 && d.result == 1) {
+				fn++;
+			} else {
+				tn++;
+			}
+		}
+		float acc = (float)(tp + tn) / dataset.size();
+		float precision;
+		if (tp + fp == 0) {
+			precision = 0f;
+		} else {
+			precision = (float) tp / (tp + fp);
+		}
+		float recall;
+		if (tp + fn == 0) {
+			recall = 0f;
+		} else {
+			recall = (float) tp / (tp + fn);
+		}
+		float f1;
+		if (precision + recall == 0) {
+			f1 = 0f;
+		} else {
+			f1 = 2 * precision * recall / (precision + recall);
+		}
+		return new float[]{acc, f1};
 	}
 
 }
