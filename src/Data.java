@@ -5,6 +5,7 @@ public class Data {
     public int nodes;
     public int tumorSize;
     public int nodeCaps;
+    public int degMalig;
     public int irradiat;
     public int breast;
     public int quad;
@@ -16,6 +17,7 @@ public class Data {
             int nodes,
             int tumorSize,
             int nodeCaps,
+            int degMalig,
             int irradiat,
             int breast,
             int quad) {
@@ -25,6 +27,7 @@ public class Data {
         this.nodes = nodes;
         this.tumorSize = tumorSize;
         this.nodeCaps = nodeCaps;
+        this.degMalig = degMalig;
         this.irradiat = irradiat;
         this.breast = breast;
         this.quad = quad;
