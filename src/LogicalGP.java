@@ -77,10 +77,13 @@ public class LogicalGP implements GP {
 		System.out.println("=== Logical GP Evolutionary Run ===");
 		System.out.println("Parameters: popSize=" + POPULATION_SIZE
 				+ ", generations=" + MAX_GENERATIONS
+				+ ", treeDepth=" + treeDepth
 				+ ", maxOffspringDepth=" + maxOffspringDepth
 				+ ", tournamentSize=" + tournamentSize
 				+ ", crossover=" + crossoverRate
-				+ ", mutation=" + mutationRate + "\n");
+				+ ", mutation=" + mutationRate 
+				+ ", mutDepth=" + mutationOffspringDepth
+				+ ", numElites=" + numElites + "\n");
 
 		intialisePopulation();
 		Node bestOverall = null;

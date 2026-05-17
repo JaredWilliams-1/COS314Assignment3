@@ -1,11 +1,9 @@
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.PrintStream;
-import java.io.OutputStream;
 
 public class Main {
 
-    static final boolean DEMO_MODE = true;
+    static final boolean DEMO_MODE = false;
     static final long    DEMO_SEED = 555666777888L;
 
     static final int   TREE_DEPTH = 4;
@@ -20,11 +18,11 @@ public class Main {
         782364521897L, 314159265358L, 998244353711L, 123456789012L,
         987654321098L, 246813579024L, 135792468013L, 864208642086L,
         579135791357L, 420864208642L, 111222333444L, 555666777888L,
-        999111222333L, 444555666777L, 888999111222L, 333444555666L,
+        999111222333L/*, 444555666777L, 888999111222L, 333444555666L,
         777888999111L, 222333444555L, 666777888999L, 100200300400L,
         500600700800L, 900100200300L, 400500600700L, 800900100200L,
         300400500600L, 700800900100L, 200300400500L, 600700800900L,
-        150263748596L, 741852963074L
+        150263748596L, 741852963074L*/
     };
 
     public static void main(String[] args) {
@@ -202,6 +200,21 @@ public class Main {
         System.out.println("  1. Set DEMO_MODE = true  in Main.java");
         System.out.println("  2. Set DEMO_SEED = " + SEEDS[best] + "L  in Main.java");
         System.out.println("  3. Recompile and run: java Main");
+
+        // Verify best result by re-running it immediately
+        // System.out.println();
+        // System.out.println("--- Verifying best run now ---");
+        // float[] verify = runOnce(SEEDS[best]);
+        // System.out.println("  Train Acc = " + round(verify[0])
+        //         + "   Train F1 = " + round(verify[1]));
+        // System.out.println("  Test Acc  = " + round(verify[2])
+        //         + "   Test F1  = " + round(verify[3]));
+        // if (Math.abs(verify[3] - testF1s[best]) > 0.0001f) {
+        //     System.out.println("  WARNING: result differs from search recording.");
+        //     System.out.println("  Recompile everything and re-run the search.");
+        // } else {
+        //     System.out.println("  Verified. Results match.");
+        // }
     }
 
     // =========================================================================
@@ -209,11 +222,6 @@ public class Main {
     // returns [trainAcc, trainF1, testAcc, testF1]
     // =========================================================================
     private static float[] runOnce(long seed) {
-        PrintStream original = System.out;
-        System.setOut(new PrintStream(new OutputStream() {
-            public void write(int b) {}
-        }));
-
         ArrayList<String> terminals = new ArrayList<>();
         terminals.add("0");
         terminals.add("1");
@@ -226,9 +234,12 @@ public class Main {
 
         gp.setNumElites(NUM_ELITES);
         gp.autoGenerateFunctionSet(4);
-        Node best = gp.build();
+        long start = System.currentTimeMillis();
+        Node best  = gp.build();
+        long ms    = System.currentTimeMillis() - start;
 
-        System.setOut(original);
+        System.out.println("=== Runtime ===");
+        System.out.println("Total time : " + ms + " ms (" + round(ms / 1000.0f) + " s)");
 
         float[] train = gp.computeMetrics(best, gp.data);
         ArrayList<Data> testData = DataCollection.getCSVValues("Breast_test.csv");
