@@ -23,5 +23,5 @@ This is a file detailing how to compile and run this project.
    java -jar COS314_GP.jar
    ```
 
-- COS314_GP must be run from the same directory as the .csv file or have the relative path entered when prompted 
+- COS314_G.jar must be run from the same directory as the .csv file or have the relative path entered when prompted 
 
