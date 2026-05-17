@@ -121,9 +121,18 @@ public class SymbolicGP implements GP {
 		return (float) correct / (float) rows.size();
 	}
 
-	@Override
 	public Node build() {
+		System.out.println("=== Symbolic GP Evolutionary Run ===");
+		System.out.println("Parameters: popSize=" + POPULATION_SIZE
+				+ ", generations=" + MAX_GENERATIONS
+				+ ", treeDepth=" + treeDepth
+				+ ", maxOffspringDepth=" + maxOffspringDepth
+				+ ", tournamentSize=" + tournamentSize
+				+ ", crossover=" + crossoverRate
+				+ ", mutation=" + mutationRate + "\n");
+
 		population = intialisePopulation();
+		float bestFitness = -1f;
 
 		for (int gen = 0; gen < MAX_GENERATIONS; gen++) {
 			fitnessCache.clear();
@@ -131,11 +140,11 @@ public class SymbolicGP implements GP {
 			root = bestTree();
 			float acc = accuracy(root, data);
 
-			System.out.println("Generation " + gen
-					+ " | Best accuracy: " + acc
-					+ " | Nodes: " + countNodes(root)
-					+ " | Depth: " + depth(root));
-			System.out.println(root.TreeToString());
+			if (acc > bestFitness) {
+				bestFitness = acc;
+			}
+
+			System.out.println("Gen " + (gen + 1) + " | Best accuracy: " + bestFitness);
 
 			if (acc >= 1.0f) {
 				break;
@@ -147,8 +156,13 @@ public class SymbolicGP implements GP {
 		}
 
 		root = bestTree();
+
+		System.out.println("\n=== Evolution Complete ===");
+		System.out.println("Best accuracy: " + bestFitness);
+
 		return root;
 	}
+
 
 	@Override
 	public ArrayList<Node> intialisePopulation() {
@@ -537,39 +551,50 @@ public class SymbolicGP implements GP {
 
 
 	public float[] computeMetrics(Node tree, ArrayList<Data> dataset) {
-		int tp = 0, fp = 0, fn = 0, tn = 0;
-		for (Data d : dataset) {
-			int predicted = classify(tree, d);
-			if (predicted == 1 && d.result == 1) {
-				tp++;
-			} else if (predicted == 1 && d.result == 0) {
-				fp++;
-			} else if (predicted == 0 && d.result == 1) {
-				fn++;
-			} else {
-				tn++;
+		float acc = accuracy(tree, dataset);
+		float f1  = calculateFMeasure(this, tree, dataset);
+		return new float[]{acc, f1};
+	}
+
+	public static float calculateFMeasure(SymbolicGP gp, Node tree, ArrayList<Data> data) {
+		int truePositive  = 0;
+		int falsePositive = 0;
+		int falseNegative = 0;
+
+		for (int i = 0; i < data.size(); i++) {
+			Data row = data.get(i);
+			int predicted = gp.classify(tree, row);
+			int actual    = row.result;
+
+			if (predicted == 1 && actual == 1) {
+				truePositive++;
+			} else if (predicted == 1 && actual == 0) {
+				falsePositive++;
+			} else if (predicted == 0 && actual == 1) {
+				falseNegative++;
 			}
 		}
-		float acc = (float)(tp + tn) / dataset.size();
+
 		float precision;
-		if (tp + fp == 0) {
-			precision = 0f;
-		} else {
-			precision = (float) tp / (tp + fp);
-		}
 		float recall;
-		if (tp + fn == 0) {
-			recall = 0f;
+
+		if (truePositive + falsePositive == 0) {
+			precision = 0.0f;
 		} else {
-			recall = (float) tp / (tp + fn);
+			precision = (float) truePositive / (float) (truePositive + falsePositive);
 		}
-		float f1;
-		if (precision + recall == 0) {
-			f1 = 0f;
+
+		if (truePositive + falseNegative == 0) {
+			recall = 0.0f;
 		} else {
-			f1 = 2 * precision * recall / (precision + recall);
+			recall = (float) truePositive / (float) (truePositive + falseNegative);
 		}
-		return new float[]{acc, f1};
+
+		if (precision + recall == 0.0f) {
+			return 0.0f;
+		}
+
+		return 2.0f * ((precision * recall) / (precision + recall));
 	}
 
 }
