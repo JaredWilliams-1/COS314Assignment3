@@ -4,6 +4,7 @@ Genetic Programming
 This is a file detailing how to compile and run this project.
 
 ## Run the JAR File
+>COS314_GP.jar must be run from the same directory as the .csv file or have the relative path entered when prompted 
 
 
 1. Run the generated JAR file:
@@ -41,6 +42,4 @@ Alternatively:
    ```bash
    java Main
    ```
-
-- COS314_G.jar must be run from the same directory as the .csv file or have the relative path entered when prompted 
 
