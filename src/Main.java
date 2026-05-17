@@ -2,214 +2,34 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
-        Node test1 = new Node(Node.Type.FUNCTION, "+");
-        test1.addLeft(new Node(Node.Type.TERMINAL, "2"));
-        test1.addRight(new Node(Node.Type.TERMINAL, "4"));
-
-        System.out.println(test1.TreeToString());
-
-        // Simple CSV retrieval test
-        System.out.println("Testing CSV loading...");
-        ArrayList<Data> dataList = DataCollection.getCSVValues("Breast_train.csv");
-        System.out.println("Loaded " + dataList.size() + " rows from Breast_train.csv");
-        if (!dataList.isEmpty()) {
-            Data first = dataList.get(0);
-            System.out.println("First row: result=" + first.result
-                    + ", age=" + first.age
-                    + ", menopause=" + first.menopause
-                    + ", nodes=" + first.nodes
-                    + ", tumorSize=" + first.tumorSize
-                    + ", nodeCaps=" + first.nodeCaps
-                    + ", irradiat=" + first.irradiat
-                    + ", breast=" + first.breast
-                    + ", quad=" + first.quad);
-        }
-
-        Scanner input = new Scanner(System.in);
-
-        System.out.println("================ SYMBOLIC GP ================");
-
-        System.out.print("Enter seed: ");
-        int seed = input.nextInt();
-
-        System.out.print("Enter initial tree depth: ");
-        int treeDepth = input.nextInt();
-
-        System.out.print("Enter max offspring depth: ");
-        int maxOffspringDepth = input.nextInt();
-
-        System.out.print("Enter tournament size: ");
-        int tournamentSize = input.nextInt();
-
-        System.out.print("Enter crossover rate e.g. 0.85: ");
-        float crossoverRate = input.nextFloat();
-
-        System.out.print("Enter mutation rate e.g. 0.15: ");
-        float mutationRate = input.nextFloat();
-
-        System.out.print("Enter mutation offspring depth: ");
-        int mutationOffspringDepth = input.nextInt();
-
-        runSingleSymbolicGP(
-                seed,
-                treeDepth,
-                maxOffspringDepth,
-                tournamentSize,
-                crossoverRate,
-                mutationRate,
-                mutationOffspringDepth);
-
-        input.close();
-
-        //ADD TEST AND TRAIN PROGRAM !?
-        //30 INDEPENDENT RUN TO RECORD BEST PERFROMNIG RUN!!
-    }
-
-    public static void runSingleSymbolicGP(
-            int seed,
-            int treeDepth,
-            int maxOffspringDepth,
-            int tournamentSize,
-            float crossoverRate,
-            float mutationRate,
-            int mutationOffspringDepth) {
-
-        ArrayList<String> terminals = getTerminals();
-        ArrayList<String> functions = getFunctions();
-
-        long startTime = System.currentTimeMillis();
-
-        SymbolicGP sg = new SymbolicGP(
-                "Breast_train.csv",
-                terminals,
-                functions,
-                treeDepth,
-                maxOffspringDepth,
-                tournamentSize,
-                crossoverRate,
-                mutationRate,
-                mutationOffspringDepth,
-                seed);
-
-        Node best = sg.build();
-
-        long endTime = System.currentTimeMillis();
-        double runtimeSeconds = (endTime - startTime) / 1000.0;
-
-        ArrayList<Data> trainData = DataCollection.getCSVValues("Breast_train.csv");
-        ArrayList<Data> testData = DataCollection.getCSVValues("Breast_test.csv");
-
-        float trainAccuracy = sg.accuracy(best, trainData);
-        float testAccuracy = sg.accuracy(best, testData);
-        float fMeasure = calculateFMeasure(sg, best, testData);
-
-        System.out.println("\n================ FINAL SYMBOLIC GP RESULTS ================");
-        System.out.println("Seed: " + seed);
-        System.out.println("Tree depth: " + treeDepth);
-        System.out.println("Max offspring depth: " + maxOffspringDepth);
-        System.out.println("Tournament size: " + tournamentSize);
-        System.out.println("Crossover rate: " + crossoverRate);
-        System.out.println("Mutation rate: " + mutationRate);
-        System.out.println("Mutation offspring depth: " + mutationOffspringDepth);
-        System.out.println("Training accuracy: " + (trainAccuracy * 100.0f) + "%");
-        System.out.println("Test accuracy: " + (testAccuracy * 100.0f) + "%");
-        System.out.println("F-measure: " + fMeasure);
-        System.out.println("Runtime: " + runtimeSeconds + " seconds");
-        System.out.println("Best tree:");
-        System.out.println(best.TreeToString());
-    }
-
-    public static float calculateFMeasure(SymbolicGP gp, Node tree, ArrayList<Data> data) {
-        int truePositive = 0;
-        int falsePositive = 0;
-        int falseNegative = 0;
-
-        for (int i = 0; i < data.size(); i++) {
-            Data row = data.get(i);
-            int predicted = gp.classify(tree, row);
-            int actual = row.result;
-
-            if (predicted == 1 && actual == 1) {
-                truePositive++;
-            } else if (predicted == 1 && actual == 0) {
-                falsePositive++;
-            } else if (predicted == 0 && actual == 1) {
-                falseNegative++;
-            }
-        }
-
-        float precision;
-        float recall;
-
-        if (truePositive + falsePositive == 0) {
-            precision = 0.0f;
-        } else {
-            precision = (float) truePositive / (float) (truePositive + falsePositive);
-        }
-
-        if (truePositive + falseNegative == 0) {
-            recall = 0.0f;
-        } else {
-            recall = (float) truePositive / (float) (truePositive + falseNegative);
-        }
-
-        if (precision + recall == 0.0f) {
-            return 0.0f;
-        }
-
-        return 2.0f * ((precision * recall) / (precision + recall));
-    }
-
-    public static ArrayList<String> getTerminals() {
-        ArrayList<String> terminals = new ArrayList<String>();
-
-        terminals.add("age");
-        terminals.add("menopause");
-        terminals.add("nodes");
-        terminals.add("tumorSize");
-        terminals.add("nodeCaps");
-        terminals.add("irradiat");
-        terminals.add("breast");
-        terminals.add("quad");
-        terminals.add("0");
-        terminals.add("1");
-
-        return terminals;
-    }
-
-    public static ArrayList<String> getFunctions() {
-        ArrayList<String> functions = new ArrayList<String>();
-
-        functions.add("+");
-        functions.add("-");
-        functions.add("*");
-        functions.add("/");
-
-        return functions;
 
     // =========================================================================
-    // DEMO_MODE = false  ->  runs all 30 seeds, ranks them, then automatically
-    //                        runs the best one in full so you can see it
-    // DEMO_MODE = true   ->  skips the search and just asks for a seed to run
-    //                        (use this on demo day once you know the best seed)
+    // LogicalGP default parameters (optimised via parameter search)
     // =========================================================================
-    static final boolean DEMO_MODE = true;
-    static final long DEMO_SEED = 864208642086L; // best from search. Hardcoded for Demo run
+    static final int   LGP_TREE_DEPTH = 4;
+    static final int   LGP_MAX_OD     = 9;
+    static final int   LGP_TOURNAMENT = 7;
+    static final float LGP_CROSSOVER  = 0.80f;
+    static final float LGP_MUTATION   = 0.15f;
+    static final int   LGP_MUT_DEPTH  = 3;
+    static final int   LGP_NUM_ELITES = 4;
+
+    static final long  LGP_DEMO_SEED = 864208642086L;
 
     // =========================================================================
-    // Optimised GP parameters
+    // SymbolicGP default parameters
     // =========================================================================
-    static final int   TREE_DEPTH = 4;
-    static final int   MAX_OD     = 9;
-    static final int   TOURNAMENT = 7;
-    static final float CROSSOVER  = 0.80f;
-    static final float MUTATION   = 0.15f;
-    static final int   MUT_DEPTH  = 3;
-    static final int   NUM_ELITES = 4;
+    static final int   SGP_TREE_DEPTH = 5;
+    static final int   SGP_MAX_OD     = 8;
+    static final int   SGP_TOURNAMENT = 7;
+    static final float SGP_CROSSOVER  = 0.80f;
+    static final float SGP_MUTATION   = 0.15f;
+    static final int   SGP_MUT_DEPTH  = 2;
+
+    static final long  SGP_DEMO_SEED = 420864208642L;
 
     // =========================================================================
-    // 30 unique seeds for independent runs
+    // 30 unique seeds shared by both algorithms
     // =========================================================================
     static final long[] SEEDS = {
         782364521897L, 314159265358L, 998244353711L, 123456789012L,
@@ -224,48 +44,81 @@ public class Main {
 
     // =========================================================================
     public static void main(String[] args) {
-        if (DEMO_MODE) {
-            runDemo();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("=== Genetic Programming Classifier ===");
+        System.out.println();
+
+        System.out.println("Select mode:");
+        System.out.println("  1. Search Mode  (30 independent runs, finds best seed)");
+        System.out.println("  2. Demo Mode    (single run, you choose all parameters)");
+        System.out.print("> ");
+        int mode = Integer.parseInt(scanner.nextLine().trim());
+
+        System.out.println();
+        System.out.println("Select algorithm:");
+        System.out.println("  1. LogicalGP   (decision tree with conditional predicates)");
+        System.out.println("  2. SymbolicGP  (arithmetic expression tree)");
+        System.out.print("> ");
+        int gpChoice = Integer.parseInt(scanner.nextLine().trim());
+
+        System.out.println();
+
+        boolean isDemo    = (mode == 2);
+        boolean isLogical = (gpChoice == 1);
+
+        if (isDemo && isLogical) {
+            runLogicalDemo(scanner);
+        } else if (isDemo && !isLogical) {
+            runSymbolicDemo(scanner);
+        } else if (!isDemo && isLogical) {
+            runSearch(true);
         } else {
-            runSearch();
+            runSearch(false);
         }
+
+        scanner.close();
     }
 
     // =========================================================================
-    // DEMO MODE — asks for a seed then runs once with full output
+    // DEMO MODE — LogicalGP
+    // Prompts for all parameters with defaults shown, then runs in full
     // =========================================================================
-    private static void runDemo() {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("=== GP Demo ===");
+    private static void runLogicalDemo(Scanner scanner) {
+        System.out.println("=== LogicalGP Demo ===");
         System.out.println();
-        System.out.println("Enter seed (press Enter for " + DEMO_SEED + "):");
+
+        System.out.println("Enter seed (press Enter for " + LGP_DEMO_SEED + "):");
         String input = scanner.nextLine().trim();
-        long seed = input.isEmpty() ? DEMO_SEED : Long.parseLong(input);
+        long seed = input.isEmpty() ? LGP_DEMO_SEED : Long.parseLong(input);
 
-        System.out.println("Enter tree depth (press Enter for " + TREE_DEPTH + "):");
+        System.out.println("Enter tree depth (press Enter for " + LGP_TREE_DEPTH + "):");
         input = scanner.nextLine().trim();
-        int treeDepth = input.isEmpty() ? TREE_DEPTH : Integer.parseInt(input);
+        int treeDepth = input.isEmpty() ? LGP_TREE_DEPTH : Integer.parseInt(input);
 
-        System.out.println("Enter max offspring depth (press Enter for " + MAX_OD + "):");
+        System.out.println("Enter max offspring depth (press Enter for " + LGP_MAX_OD + "):");
         input = scanner.nextLine().trim();
-        int maxOffspringDepth = input.isEmpty() ? MAX_OD : Integer.parseInt(input);
+        int maxOD = input.isEmpty() ? LGP_MAX_OD : Integer.parseInt(input);
 
-        System.out.println("Enter tournament size (press Enter for " + TOURNAMENT + "):");
+        System.out.println("Enter tournament size (press Enter for " + LGP_TOURNAMENT + "):");
         input = scanner.nextLine().trim();
-        int tournamentSize = input.isEmpty() ? TOURNAMENT : Integer.parseInt(input);
+        int tournament = input.isEmpty() ? LGP_TOURNAMENT : Integer.parseInt(input);
 
-        System.out.println("Enter crossover rate (press Enter for " + CROSSOVER + "):");
+        System.out.println("Enter crossover rate (press Enter for " + LGP_CROSSOVER + "):");
         input = scanner.nextLine().trim();
-        float crossoverRate = input.isEmpty() ? CROSSOVER : Float.parseFloat(input);
+        float crossover = input.isEmpty() ? LGP_CROSSOVER : Float.parseFloat(input);
 
-        System.out.println("Enter mutation rate (press Enter for " + MUTATION + "):");
+        System.out.println("Enter mutation rate (press Enter for " + LGP_MUTATION + "):");
         input = scanner.nextLine().trim();
-        float mutationRate = input.isEmpty() ? MUTATION : Float.parseFloat(input);
+        float mutation = input.isEmpty() ? LGP_MUTATION : Float.parseFloat(input);
 
-        System.out.println("Enter mutation depth (press Enter for " + MUT_DEPTH + "):");
+        System.out.println("Enter mutation depth (press Enter for " + LGP_MUT_DEPTH + "):");
         input = scanner.nextLine().trim();
-        int mutationDepth = input.isEmpty() ? MUT_DEPTH : Integer.parseInt(input);
+        int mutDepth = input.isEmpty() ? LGP_MUT_DEPTH : Integer.parseInt(input);
+
+        System.out.println("Enter number of elites (press Enter for " + LGP_NUM_ELITES + "):");
+        input = scanner.nextLine().trim();
+        int numElites = input.isEmpty() ? LGP_NUM_ELITES : Integer.parseInt(input);
 
         System.out.println("Enter training file path (press Enter for Breast_train.csv):");
         input = scanner.nextLine().trim();
@@ -275,26 +128,86 @@ public class Main {
         input = scanner.nextLine().trim();
         String testFile = input.isEmpty() ? "Breast_test.csv" : input;
 
-        scanner.close();
         System.out.println();
 
-        runFull(seed, treeDepth, maxOffspringDepth, tournamentSize, crossoverRate, mutationRate, mutationDepth, trainFile, testFile);
+        runLogicalFull(seed, treeDepth, maxOD, tournament, crossover, mutation, mutDepth, numElites, trainFile, testFile);
     }
 
     // =========================================================================
-    // SEARCH MODE — runs all 30 seeds, finds best, then runs best in full
+    // DEMO MODE — SymbolicGP
     // =========================================================================
-    private static void runSearch() {
-        System.out.println("=== 30 Independent Runs ===");
-        System.out.println("popSize=" + LogicalGP.POPULATION_SIZE
-                + "  generations=" + LogicalGP.MAX_GENERATIONS
-                + "  treeDepth=" + TREE_DEPTH
-                + "  maxOD=" + MAX_OD
-                + "  tourn=" + TOURNAMENT
-                + "  crossover=" + CROSSOVER
-                + "  mutation=" + MUTATION
-                + "  mutDepth=" + MUT_DEPTH
-                + "  elites=" + NUM_ELITES);
+    private static void runSymbolicDemo(Scanner scanner) {
+        System.out.println("=== SymbolicGP Demo ===");
+        System.out.println();
+
+        System.out.println("Enter seed (press Enter for " + SGP_DEMO_SEED + "):");
+        String input = scanner.nextLine().trim();
+        long seed = input.isEmpty() ? SGP_DEMO_SEED : Long.parseLong(input);
+
+        System.out.println("Enter tree depth (press Enter for " + SGP_TREE_DEPTH + "):");
+        input = scanner.nextLine().trim();
+        int treeDepth = input.isEmpty() ? SGP_TREE_DEPTH : Integer.parseInt(input);
+
+        System.out.println("Enter max offspring depth (press Enter for " + SGP_MAX_OD + "):");
+        input = scanner.nextLine().trim();
+        int maxOD = input.isEmpty() ? SGP_MAX_OD : Integer.parseInt(input);
+
+        System.out.println("Enter tournament size (press Enter for " + SGP_TOURNAMENT + "):");
+        input = scanner.nextLine().trim();
+        int tournament = input.isEmpty() ? SGP_TOURNAMENT : Integer.parseInt(input);
+
+        System.out.println("Enter crossover rate (press Enter for " + SGP_CROSSOVER + "):");
+        input = scanner.nextLine().trim();
+        float crossover = input.isEmpty() ? SGP_CROSSOVER : Float.parseFloat(input);
+
+        System.out.println("Enter mutation rate (press Enter for " + SGP_MUTATION + "):");
+        input = scanner.nextLine().trim();
+        float mutation = input.isEmpty() ? SGP_MUTATION : Float.parseFloat(input);
+
+        System.out.println("Enter mutation depth (press Enter for " + SGP_MUT_DEPTH + "):");
+        input = scanner.nextLine().trim();
+        int mutDepth = input.isEmpty() ? SGP_MUT_DEPTH : Integer.parseInt(input);
+
+        System.out.println("Enter training file path (press Enter for Breast_train.csv):");
+        input = scanner.nextLine().trim();
+        String trainFile = input.isEmpty() ? "Breast_train.csv" : input;
+
+        System.out.println("Enter test file path (press Enter for Breast_test.csv):");
+        input = scanner.nextLine().trim();
+        String testFile = input.isEmpty() ? "Breast_test.csv" : input;
+
+        System.out.println();
+
+        runSymbolicFull(seed, treeDepth, maxOD, tournament, crossover, mutation, mutDepth, trainFile, testFile);
+    }
+
+    // =========================================================================
+    // SEARCH MODE — 30 independent runs, finds best seed, runs it in full
+    // =========================================================================
+    private static void runSearch(boolean logical) {
+        String label = logical ? "LogicalGP" : "SymbolicGP";
+        System.out.println("=== " + label + " — 30 Independent Runs ===");
+
+        if (logical) {
+            System.out.println("popSize=" + LogicalGP.POPULATION_SIZE
+                    + "  generations=" + LogicalGP.MAX_GENERATIONS
+                    + "  treeDepth=" + LGP_TREE_DEPTH
+                    + "  maxOD=" + LGP_MAX_OD
+                    + "  tourn=" + LGP_TOURNAMENT
+                    + "  crossover=" + LGP_CROSSOVER
+                    + "  mutation=" + LGP_MUTATION
+                    + "  mutDepth=" + LGP_MUT_DEPTH
+                    + "  elites=" + LGP_NUM_ELITES);
+        } else {
+            System.out.println("popSize=" + SymbolicGP.POPULATION_SIZE
+                    + "  generations=" + SymbolicGP.MAX_GENERATIONS
+                    + "  treeDepth=" + SGP_TREE_DEPTH
+                    + "  maxOD=" + SGP_MAX_OD
+                    + "  tourn=" + SGP_TOURNAMENT
+                    + "  crossover=" + SGP_CROSSOVER
+                    + "  mutation=" + SGP_MUTATION
+                    + "  mutDepth=" + SGP_MUT_DEPTH);
+        }
         System.out.println();
 
         float[] trainAccs = new float[SEEDS.length];
@@ -307,7 +220,13 @@ public class Main {
         for (int i = 0; i < SEEDS.length; i++) {
             System.out.println("Run " + (i + 1) + " of 30   seed = " + SEEDS[i]);
 
-            float[] m = runOnce(SEEDS[i]);
+            float[] m;
+            if (logical) {
+                m = runLogicalOnce(SEEDS[i]);
+            } else {
+                m = runSymbolicOnce(SEEDS[i]);
+            }
+
             trainAccs[i] = m[0];
             trainF1s[i]  = m[1];
             testAccs[i]  = m[2];
@@ -325,7 +244,6 @@ public class Main {
                 + ((totalMs / 1000) % 60) + " sec");
         System.out.println();
 
-        // Find best by test F1, break ties with test accuracy
         int bestIdx = 0;
         for (int i = 1; i < SEEDS.length; i++) {
             if (testF1s[i] > testF1s[bestIdx]) {
@@ -336,7 +254,7 @@ public class Main {
         }
 
         System.out.println("==========================================");
-        System.out.println("  BEST RUN");
+        System.out.println("  BEST RUN — " + label);
         System.out.println("==========================================");
         System.out.println("  Run       : " + (bestIdx + 1) + " of 30");
         System.out.println("  Seed      : " + SEEDS[bestIdx]);
@@ -347,22 +265,24 @@ public class Main {
         System.out.println("Running best seed in full...");
         System.out.println();
 
-        runFull(SEEDS[bestIdx], TREE_DEPTH, MAX_OD, TOURNAMENT, CROSSOVER, MUTATION, MUT_DEPTH,"Breast_train.csv", "Breast_test.csv");
+        if (logical) {
+            runLogicalFull(SEEDS[bestIdx], LGP_TREE_DEPTH, LGP_MAX_OD, LGP_TOURNAMENT,
+                    LGP_CROSSOVER, LGP_MUTATION, LGP_MUT_DEPTH, LGP_NUM_ELITES,
+                    "Breast_train.csv", "Breast_test.csv");
+        } else {
+            runSymbolicFull(SEEDS[bestIdx], SGP_TREE_DEPTH, SGP_MAX_OD, SGP_TOURNAMENT,
+                    SGP_CROSSOVER, SGP_MUTATION, SGP_MUT_DEPTH,
+                    "Breast_train.csv", "Breast_test.csv");
+        }
     }
 
     // =========================================================================
-    // Shared method — both search and demo call this so results always match
+    // LogicalGP — full run with all parameters explicit
     // =========================================================================
-    private static void runFull(
-        long seed, 
-        int treeDepth, 
-        int maxOffspringDepth, 
-        int tournamentSize, 
-        float crossoverRate, 
-        float mutationRate, 
-        int mutationDepth,
-        String trainFile, 
-        String testFile) {
+    private static void runLogicalFull(long seed, int treeDepth, int maxOD, int tournament,
+            float crossover, float mutation, int mutDepth, int numElites,
+            String trainFile, String testFile) {
+
         ArrayList<String> terminals = new ArrayList<>();
         terminals.add("0");
         terminals.add("1");
@@ -370,17 +290,25 @@ public class Main {
 
         LogicalGP gp = new LogicalGP(
                 trainFile, terminals, functions,
-                treeDepth, maxOffspringDepth, tournamentSize,
-                crossoverRate, mutationRate, mutationDepth, seed);
+                treeDepth, maxOD, tournament,
+                crossover, mutation, mutDepth, seed);
 
-        gp.setNumElites(NUM_ELITES);
+        gp.setNumElites(numElites);
         gp.autoGenerateFunctionSet(4);
 
+        System.out.println("Algorithm       : LogicalGP");
         System.out.println("Seed            : " + seed);
         System.out.println("Training file   : " + trainFile);
         System.out.println("Test file       : " + testFile);
         System.out.println("Population size : " + LogicalGP.POPULATION_SIZE);
         System.out.println("Max generations : " + LogicalGP.MAX_GENERATIONS);
+        System.out.println("Tree depth      : " + treeDepth);
+        System.out.println("Max offspring D : " + maxOD);
+        System.out.println("Tournament size : " + tournament);
+        System.out.println("Crossover rate  : " + crossover);
+        System.out.println("Mutation rate   : " + mutation);
+        System.out.println("Mutation depth  : " + mutDepth);
+        System.out.println("Elites          : " + numElites);
         System.out.println("Function set    : " + gp.functionSet.size() + " predicates");
         System.out.println();
 
@@ -388,17 +316,130 @@ public class Main {
         Node best  = gp.build();
         long ms    = System.currentTimeMillis() - start;
 
+        printResults(gp.computeMetrics(best, gp.data),
+                     gp.computeMetrics(best, DataCollection.getCSVValues(testFile)),
+                     ms, best);
+    }
+
+    // =========================================================================
+    // LogicalGP — silent run using default constants
+    // =========================================================================
+    private static float[] runLogicalOnce(long seed) {
+        ArrayList<String> terminals = new ArrayList<>();
+        terminals.add("0");
+        terminals.add("1");
+        ArrayList<String> functions = new ArrayList<>();
+
+        LogicalGP gp = new LogicalGP(
+                "Breast_train.csv", terminals, functions,
+                LGP_TREE_DEPTH, LGP_MAX_OD, LGP_TOURNAMENT,
+                LGP_CROSSOVER, LGP_MUTATION, LGP_MUT_DEPTH, seed);
+
+        gp.setNumElites(LGP_NUM_ELITES);
+        gp.autoGenerateFunctionSet(4);
+        Node best = gp.build();
+
         float[] train = gp.computeMetrics(best, gp.data);
+        float[] test  = gp.computeMetrics(best, DataCollection.getCSVValues("Breast_test.csv"));
+        return new float[]{train[0], train[1], test[0], test[1]};
+    }
+
+    // =========================================================================
+    // SymbolicGP — full run with all parameters explicit
+    // =========================================================================
+    private static void runSymbolicFull(long seed, int treeDepth, int maxOD, int tournament,
+            float crossover, float mutation, int mutDepth,
+            String trainFile, String testFile) {
+
+        ArrayList<String> terminals = buildSymbolicTerminals();
+        ArrayList<String> functions = buildSymbolicFunctions();
+
+        SymbolicGP gp = new SymbolicGP(
+                trainFile, terminals, functions,
+                treeDepth, maxOD, tournament,
+                crossover, mutation, mutDepth, seed);
+
+        System.out.println("Algorithm       : SymbolicGP");
+        System.out.println("Seed            : " + seed);
+        System.out.println("Training file   : " + trainFile);
+        System.out.println("Test file       : " + testFile);
+        System.out.println("Population size : " + SymbolicGP.POPULATION_SIZE);
+        System.out.println("Max generations : " + SymbolicGP.MAX_GENERATIONS);
+        System.out.println("Tree depth      : " + treeDepth);
+        System.out.println("Max offspring D : " + maxOD);
+        System.out.println("Tournament size : " + tournament);
+        System.out.println("Crossover rate  : " + crossover);
+        System.out.println("Mutation rate   : " + mutation);
+        System.out.println("Mutation depth  : " + mutDepth);
+        System.out.println("Terminals       : " + terminals.size());
+        System.out.println("Functions       : " + functions);
+        System.out.println();
+
+        long start = System.currentTimeMillis();
+        Node best  = gp.build();
+        long ms    = System.currentTimeMillis() - start;
+
+        printResults(gp.computeMetrics(best, gp.data),
+                     gp.computeMetrics(best, DataCollection.getCSVValues(testFile)),
+                     ms, best);
+    }
+
+    // =========================================================================
+    // SymbolicGP — silent run using default constants
+    // =========================================================================
+    private static float[] runSymbolicOnce(long seed) {
+        ArrayList<String> terminals = buildSymbolicTerminals();
+        ArrayList<String> functions = buildSymbolicFunctions();
+
+        SymbolicGP gp = new SymbolicGP(
+                "Breast_train.csv", terminals, functions,
+                SGP_TREE_DEPTH, SGP_MAX_OD, SGP_TOURNAMENT,
+                SGP_CROSSOVER, SGP_MUTATION, SGP_MUT_DEPTH, seed);
+
+        Node best = gp.build();
+
+        float[] train = gp.computeMetrics(best, gp.data);
+        float[] test  = gp.computeMetrics(best, DataCollection.getCSVValues("Breast_test.csv"));
+        return new float[]{train[0], train[1], test[0], test[1]};
+    }
+
+    // =========================================================================
+    // SymbolicGP terminal and function set builders
+    // =========================================================================
+    private static ArrayList<String> buildSymbolicTerminals() {
+        ArrayList<String> t = new ArrayList<>();
+        t.add("age");
+        t.add("menopause");
+        t.add("nodes");
+        t.add("tumorSize");
+        t.add("nodeCaps");
+        t.add("degMalig");
+        t.add("irradiat");
+        t.add("breast");
+        t.add("quad");
+        t.add("0.5");
+        t.add("1.0");
+        return t;
+    }
+
+    private static ArrayList<String> buildSymbolicFunctions() {
+        ArrayList<String> f = new ArrayList<>();
+        f.add("+");
+        f.add("-");
+        f.add("*");
+        f.add("/");
+        return f;
+    }
+
+    // =========================================================================
+    // Shared result printer
+    // =========================================================================
+    private static void printResults(float[] train, float[] test, long ms, Node best) {
         System.out.println();
         System.out.println("=== Training Results ===");
         System.out.println("Accuracy : " + round(train[0]));
         System.out.println("F1 Score : " + round(train[1]));
 
-        ArrayList<Data> testData = DataCollection.getCSVValues(testFile);
-        System.out.println();
-        System.out.println("Test data loaded: " + testData.size() + " samples");
-
-        float[] test = gp.computeMetrics(best, testData);
         System.out.println();
         System.out.println("=== Test Results ===");
         System.out.println("Accuracy : " + round(test[0]));
@@ -411,31 +452,6 @@ public class Main {
         System.out.println();
         System.out.println("=== Best Tree ===");
         System.out.println(best.TreeToString());
-    }
-
-    // =========================================================================
-    // Runs one seed and returns [trainAcc, trainF1, testAcc, testF1]
-    // =========================================================================
-    private static float[] runOnce(long seed) {
-        ArrayList<String> terminals = new ArrayList<>();
-        terminals.add("0");
-        terminals.add("1");
-        ArrayList<String> functions = new ArrayList<>();
-
-        LogicalGP gp = new LogicalGP(
-                "Breast_train.csv", terminals, functions,
-                TREE_DEPTH, MAX_OD, TOURNAMENT,
-                CROSSOVER, MUTATION, MUT_DEPTH, seed);
-
-        gp.setNumElites(NUM_ELITES);
-        gp.autoGenerateFunctionSet(4);
-        Node best = gp.build();
-
-        float[] train = gp.computeMetrics(best, gp.data);
-        ArrayList<Data> testData = DataCollection.getCSVValues("Breast_test.csv");
-        float[] test  = gp.computeMetrics(best, testData);
-
-        return new float[]{train[0], train[1], test[0], test[1]};
     }
 
     // =========================================================================
